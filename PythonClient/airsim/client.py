@@ -9,6 +9,8 @@ import msgpack
 import time
 import math
 import logging
+import airsim
+
 
 class VehicleClient:
     def __init__(self, ip = "", port = 41451, timeout_value = 3600):
@@ -17,9 +19,56 @@ class VehicleClient:
         self.client = msgpackrpc.Client(msgpackrpc.Address(ip, port), timeout = timeout_value, pack_encoding = 'utf-8', unpack_encoding = 'utf-8')
         
     # -----------------------------------  Common vehicle APIs ---------------------------------------------
+
+    @staticmethod
+    def toEulerianAngle(q):
+        z = q.z_val
+        y = q.y_val
+        x = q.x_val
+        w = q.w_val
+        ysqr = y * y
+
+        # roll (x-axis rotation)
+        t0 = +2.0 * (w * x + y * z)
+        t1 = +1.0 - 2.0 * (x * x + ysqr)
+        roll = math.atan2(t0, t1)
+
+        # pitch (y-axis rotation)
+        t2 = +2.0 * (w * y - z * x)
+        if (t2 > 1.0):
+            t2 = 1
+        if (t2 < -1.0):
+            t2 = -1.0
+        pitch = math.asin(t2)
+
+        # yaw (z-axis rotation)
+        t3 = +2.0 * (w * z + x * y)
+        t4 = +1.0 - 2.0 * (ysqr + z * z)
+        yaw = math.atan2(t3, t4)
+
+        return (pitch, roll, yaw)
+
+
     def reset(self):
         self.client.call('reset')
+    
+    def resetUnreal(self, sleep_time_before =.1, sleep_time_after=.1):
+        time.sleep(sleep_time_before)  #not sure why we need this, but sometimes
+                                       #we do
+        self.client.call('resetUnreal')
+        time.sleep(sleep_time_after) #this is necessary because resetUnreal is done
+                              #through setting a local variable through RPC
+                              #and later reacting to it in SimMode
+                              #which means other rpc calls might take effect
+                              #before reset. Hence to ensure the order, we need 
+                              # an extra sleep. With Behzad machines
+                              # it seems like 30 ms is enough sleep time
+                              # althought sometimes it needs 300 ms!!!!
 
+        client = airsim.MultirotorClient(ip="127.0.0.1")
+        client.enableApiControl(True)
+        return client
+    
     def ping(self):
         return self.client.call('ping')
 
@@ -185,35 +234,37 @@ class VehicleClient:
 
     # legacy handling
     # TODO: remove below legacy wrappers in future major releases
-    upgrade_api_help = "\nPlease see https://github.com/Microsoft/AirSim/blob/master/docs/upgrade_apis.md for more info."
+    upgrade_api_help = ""
     def simGetPose(self):
-        logging.warning("simGetPose API is renamed to simGetVehiclePose. Please update your code." + self.upgrade_api_help)
+        #logging.warning("simGetPose API is renamed to simGetVehiclePose. Please update your code." + self.upgrade_api_help)
         return self.simGetVehiclePose()
     def simSetPose(self, pose, ignore_collison):
-        logging.warning("simSetPose API is renamed to simSetVehiclePose. Please update your code." + self.upgrade_api_help)
+        #logging.warning("simSetPose API is renamed to simSetVehiclePose. Please update your code." + self.upgrade_api_help)
         return self.simSetVehiclePose(pose, ignore_collison)
     def getCollisionInfo(self):
-        logging.warning("getCollisionInfo API is renamed to simGetCollisionInfo. Please update your code." + self.upgrade_api_help)
+        #logging.warning("getCollisionInfo API is renamed to simGetCollisionInfo. Please update your code." + self.upgrade_api_help)
         return self.simGetCollisionInfo()
     def getCameraInfo(self, camera_id):
-        logging.warning("getCameraInfo API is renamed to simGetCameraInfo. Please update your code." + self.upgrade_api_help)
+        #logging.warning("getCameraInfo API is renamed to simGetCameraInfo. Please update your code." + self.upgrade_api_help)
         return self.simGetCameraInfo(camera_id)
     def setCameraOrientation(self, camera_id, orientation):
-        logging.warning("setCameraOrientation API is renamed to simSetCameraOrientation. Please update your code." + self.upgrade_api_help)
+        #logging.warning("setCameraOrientation API is renamed to simSetCameraOrientation. Please update your code." + self.upgrade_api_help)
         return self.simSetCameraOrientation(camera_id, orientation)
     def getPosition(self):
-        logging.warning("getPosition API is deprecated. For ground-truth please use simGetGroundTruthKinematics() API." + self.upgrade_api_help)
+        #logging.warning("getPosition API is deprecated. For ground-truth please use simGetGroundTruthKinematics() API." + self.upgrade_api_help)
         return self.simGetGroundTruthKinematics().position
     def getVelocity(self):
-        logging.warning("getVelocity API is deprecated. For ground-truth please use simGetGroundTruthKinematics() API." + self.upgrade_api_help)
+        #logging.warning("getVelocity API is deprecated. For ground-truth please use simGetGroundTruthKinematics() API." + self.upgrade_api_help)
         return self.simGetGroundTruthKinematics().linear_velocity
     def getOrientation(self):
-        logging.warning("getOrientation API is deprecated. For ground-truth please use simGetGroundTruthKinematics() API." + self.upgrade_api_help)
+        #logging.warning("getOrientation API is deprecated. For ground-truth please use simGetGroundTruthKinematics() API." + self.upgrade_api_help)
         return self.simGetGroundTruthKinematics().orientation
+    def getPitchRollYaw(self):
+        return self.toEulerianAngle(self.getOrientation())
     def getLandedState(self):
         raise Exception("getLandedState API is deprecated. Please use getMultirotorState() API")
     def getGpsLocation(self):
-        logging.warning("getGpsLocation API is deprecated. For ground-truth please use simGetGroundTruthKinematics() API." + self.upgrade_api_help)
+        #logging.warning("getGpsLocation API is deprecated. For ground-truth please use simGetGroundTruthKinematics() API." + self.upgrade_api_help)
         return self.simGetGroundTruthEnvironment().geo_point
     def takeoff(self, max_wait_seconds = 15):
         raise Exception("takeoff API is deprecated. Please use takeoffAsync() API." + self.upgrade_api_help)

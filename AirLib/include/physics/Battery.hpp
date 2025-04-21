@@ -124,9 +124,6 @@ class PowerEstimator {
     double vz_mag = abs(vz);
     double az_mag = abs(az);
   
-    if (vxy_mag > 1.0) {
-        printf("here");
-    }
 
 
     double first_vec[] = {vxy_mag, axy_mag, vxy_mag*axy_mag};

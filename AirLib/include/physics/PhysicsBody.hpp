@@ -73,7 +73,7 @@ public: //interface
             last_pose_ = cur_pose;
         }
 
-        float distance_traveled_temp = sqrt(pow((cur_pose.position - last_pose_.position)[0],2) + pow((cur_pose.position - last_pose_.position)[1],2) + pow((cur_pose.position - last_pose_.position)[2],2));
+        float distance_traveled_temp = sqrt(powf((cur_pose.position - last_pose_.position)[0],2) + powf((cur_pose.position - last_pose_.position)[1],2) + powf((cur_pose.position - last_pose_.position)[2],2));
 
         if (distance_traveled_temp > distance_traveled_quanta_) { //only update if greater than certain threshold cause otherwise the error accumulates
             distance_traveled_ += distance_traveled_temp;

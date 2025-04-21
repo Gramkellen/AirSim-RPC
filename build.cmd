@@ -13,11 +13,11 @@ if "%VisualStudioVersion%"=="" (
     echo oh oh... You need to run this command from x64 Native Tools Command Prompt for VS 2017.
     goto :buildfailed_nomsg
 )
-if "%VisualStudioVersion%"=="14.0" (
+if "%VisualStudioVersion%" lss "17.0" (
     echo(
-    echo Hello there! We just upgraded AirSim to Unreal Engine 4.18 and Visual Studio 2017.
+    echo Hello there! We just upgraded AirSim to Unreal Engine 4.27 and Visual Studio 2022.
     echo Here are few easy steps for upgrade so everything is new and shiny:
-    echo https://github.com/Microsoft/AirSim/blob/master/docs/unreal_upgrade.md
+    echo https://github.com/Microsoft/AirSim/blob/main/docs/unreal_upgrade.md
     goto :buildfailed_nomsg
 )
 
@@ -77,8 +77,7 @@ REM //---------- Build rpclib ------------
 ECHO Starting cmake to build rpclib...
 IF NOT EXIST external\rpclib\rpclib-2.2.1\build mkdir external\rpclib\rpclib-2.2.1\build
 cd external\rpclib\rpclib-2.2.1\build
-REM cmake -G"Visual Studio 14 2015 Win64" ..
-cmake -G"Visual Studio 15 2017 Win64" ..
+cmake -G"Visual Studio 17 2022" .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
 if "%buildMode%" == "--Debug" (
 cmake --build . --config Debug
@@ -157,15 +156,15 @@ IF NOT EXIST AirLib\deps\eigen3 goto :buildfailed
 
 REM //---------- now we have all dependencies to compile AirSim.sln which will also compile MavLinkCom ----------
 if "%buildMode%" == "--Debug" (
-msbuild /p:Platform=x64 /p:Configuration=Debug AirSim.sln
+msbuild /p:Platform=x64 /p:Configuration=Debug /p:PlatformToolset=v143 /p:CppStandard=17 AirSim.sln
 if ERRORLEVEL 1 goto :buildfailed
 ) else if "%buildMode%" == "--Release" (
-msbuild /p:Platform=x64 /p:Configuration=Release AirSim.sln
+msbuild /p:Platform=x64 /p:Configuration=Release /p:PlatformToolset=v143 /p:CppStandard=17 AirSim.sln
 if ERRORLEVEL 1 goto :buildfailed
 ) else (
-msbuild /p:Platform=x64 /p:Configuration=Debug AirSim.sln
+msbuild /p:Platform=x64 /p:Configuration=Debug /p:PlatformToolset=v143 /p:CppStandard=17 AirSim.sln
 if ERRORLEVEL 1 goto :buildfailed
-msbuild /p:Platform=x64 /p:Configuration=Release AirSim.sln 
+msbuild /p:Platform=x64 /p:Configuration=Release /p:PlatformToolset=v143 /p:CppStandard=17 AirSim.sln 
 if ERRORLEVEL 1 goto :buildfailed
 )
 

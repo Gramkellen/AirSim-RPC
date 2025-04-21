@@ -5,6 +5,7 @@
 
 #include "Utils.hpp"
 #include "FileSystem.hpp"
+#include "MavLinkTcpServer.hpp"
 #include "MavLinkConnection.hpp"
 #include "MavLinkVehicle.hpp"
 #include "MavLinkMessages.hpp"
@@ -22,12 +23,8 @@ STRICT_MODE_OFF
 STRICT_MODE_ON
 #include "UnitTests.h"
 
-#if defined(_WIN32) || ((defined __cplusplus) && (__cplusplus >= 201700L))
 #include <filesystem>
-#define USE_CPP_FILESYSTEM
-#else
-#undef USE_CPP_FILESYSTEM
-#endif
+using namespace std::filesystem;
 
 /* enable math defines on Windows */
 
@@ -153,14 +150,7 @@ std::shared_ptr<MavLinkConnection> logConnection;
 std::shared_ptr<MavLinkVehicle> mavLinkVehicle;
 
 
-#if defined(USE_CPP_FILESYSTEM)
 
-//can't use experimental stuff on Linux because of potential ABI issues
-#if defined(_WIN32) || ((defined __cplusplus) && (__cplusplus < 201700L))
-using namespace std::experimental::filesystem;
-#else
-using namespace std::filesystem;
-#endif
 
 void ConvertLogFileToJson(std::string logFile)
 {
@@ -393,8 +383,6 @@ void ConvertLogFilesToCsv(std::string directory)
     }
 }
 
-
-#endif
 
 void OpenLogFiles() {
     if (logDirectory.size() > 0)
@@ -1033,7 +1021,10 @@ std::string findPixhawk() {
             if (info.pid == pixhawkFMUV4ProductId || info.pid == pixhawkFMUV2ProductId || info.pid == pixhawkFMUV2OldBootloaderProductId)
             {
                 printf("Auto Selecting COM port: %S\n", info.displayName.c_str());
-                return std::string(info.portName.begin(), info.portName.end());
+
+                std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+                std::string portName_str = converter.to_bytes(info.portName);
+                return portName_str;
             }
         }
     }

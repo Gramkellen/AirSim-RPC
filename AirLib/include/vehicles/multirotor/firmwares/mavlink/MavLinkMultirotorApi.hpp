@@ -852,18 +852,18 @@ private: //methods
         for (auto iter = result.begin(); iter != result.end(); iter++)
         {
             mavlinkcom::SerialPortInfo info = *iter;
-            if (
-                (
+            if ((
                 (info.vid == pixhawkVendorId) &&
-                    (info.pid == pixhawkFMUV4ProductId || info.pid == pixhawkFMUV2ProductId || info.pid == pixhawkFMUV2OldBootloaderProductId)
-                    ) ||
-                    (
-                (info.displayName.find(L"PX4_") != std::string::npos)
-                        )
-                )
-            {
+                (info.pid == pixhawkFMUV4ProductId || info.pid == pixhawkFMUV2ProductId || info.pid == pixhawkFMUV2OldBootloaderProductId )) ||
+                ((info.displayName.find(L"PX4_") != std::string::npos))) {
                 // printf("Auto Selecting COM port: %S\n", info.displayName.c_str());
-                return std::string(info.portName.begin(), info.portName.end());
+
+                std::string portName_str;
+
+                for (wchar_t ch : info.portName) {
+                    portName_str.push_back(static_cast<char>(ch));
+                }
+                return portName_str;
             }
         }
         return "";
