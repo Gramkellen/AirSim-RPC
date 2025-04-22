@@ -1,4 +1,5 @@
 #! /bin/bash
+CMAKE=/usr/bin/cmake
 
 # get path of current script: https://stackoverflow.com/a/39340259/207661
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -8,23 +9,8 @@ set -e
 # set -x
 
 #check for correct verion of llvm
-if [[ ! -d "llvm-source-50" ]]; then
-    if [[ -d "llvm-source-39" ]]; then
-        echo "Hello there! We just upgraded AirSim to Unreal Engine 4.18."
-        echo "Here are few easy steps for upgrade so everything is new and shiny :)"
-        echo "https://github.com/Microsoft/AirSim/blob/master/docs/unreal_upgrade.md"
-        exit 1
-    else
-        echo "The llvm-souce-50 folder was not found! Mystery indeed."
-    fi
-fi
 
 # check for libc++
-if [[ !(-d "./llvm-build/output/lib") ]]; then
-    echo "ERROR: clang++ and libc++ is necessary to compile AirSim and run it in Unreal engine"
-    echo "Please run setup.sh first."
-    exit 1
-fi
 
 # check for rpclib
 if [ ! -d "./external/rpclib/rpclib-2.2.1" ]; then
@@ -54,8 +40,8 @@ else
     else
         CMAKE="$(readlink -f cmake_build/bin/cmake)"
 
-        export CC="clang-5.0"
-        export CXX="clang++-5.0"
+        export CC="clang-10"
+        export CXX="clang++-10"
     fi
 fi
 
@@ -83,6 +69,10 @@ if [[ ! -d $build_dir ]]; then
     pushd $build_dir  >/dev/null
 
     "$CMAKE" ../cmake -DCMAKE_BUILD_TYPE=Debug \
+  	 -DCMAKE_CXX_STANDARD=17 \
+  	 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+ 	 -DCMAKE_CXX_EXTENSIONS=OFF \
+  	 -DCMAKE_CXX_FLAGS="-std=c++17" \
         || (popd && rm -r $build_dir && exit 1)
     popd >/dev/null
 fi

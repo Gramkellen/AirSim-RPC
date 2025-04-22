@@ -14,7 +14,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd "$SCRIPT_DIR" >/dev/null
 
 #Parse command line arguments
-downloadHighPolySuv=true
+downloadHighPolySuv=false
 if [[ $1 == "--no-full-poly-car" ]]; then
     downloadHighPolySuv=false
 fi
@@ -28,14 +28,9 @@ if [ "$(uname)" == "Darwin" ]; then # osx
 
     #below takes way too long
     # brew install llvm@3.9
-    brew tap llvm-hs/homebrew-llvm
-    brew install llvm-5.0
 
-    brew install wget
-    brew install coreutils
-
-    export C_COMPILER=/usr/local/opt/llvm-5.0/bin/clang-5.0
-    export COMPILER=/usr/local/opt/llvm-5.0/bin/clang++-5.0
+    export C_COMPILER=/usr/local/opt/llvm@10/bin/clang-10
+    export COMPILER=/usr/local/opt/llvm@10/bin/clang++-10
 else #linux
     if [[ ! -z "${whoami}" ]]; then #this happens when running in travis
         sudo /usr/sbin/useradd -G dialout $USER
@@ -51,11 +46,19 @@ else #linux
         wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
         sudo apt-get update
     fi
-    sudo apt-get install -y clang-5.0 clang++-5.0
-    sudo apt-get install -y unzip
+   	sudo apt update
+	sudo apt install -y \
+  	build-essential \
+  	gcc-9 g++-9 \
+  	clang-10\
+  	libc++-10-dev libc++abi-10-dev \
+  	cmake \
+  	unzip \
+  	wget \
+  	libvulkan-dev libssl-dev
 
-    export C_COMPILER=clang-5.0
-    export COMPILER=clang++-5.0
+    export C_COMPILER=clang-10
+    export COMPILER=clang++-10
 fi
 
 #download cmake - we need v3.9+ which is not out of box in Ubuntu 16.04
@@ -134,44 +137,7 @@ fi
 # #sudo apt-get install -y clang-3.9-doc libclang-common-3.9-dev libclang-3.9-dev libclang1-3.9 libclang1-3.9-dbg libllvm-3.9-ocaml-dev libllvm3.9 libllvm3.9-dbg lldb-3.9 llvm-3.9 llvm-3.9-dev llvm-3.9-doc llvm-3.9-examples llvm-3.9-runtime clang-format-3.9 python-clang-3.9 libfuzzer-3.9-dev
 
 #get libc++ source
-if [[ ! -d "llvm-source-50" ]]; then 
-    git clone --depth=1 -b release_50  https://github.com/llvm-mirror/llvm.git llvm-source-50
-    git clone --depth=1 -b release_50  https://github.com/llvm-mirror/libcxx.git llvm-source-50/projects/libcxx
-    git clone --depth=1 -b release_50  https://github.com/llvm-mirror/libcxxabi.git llvm-source-50/projects/libcxxabi
-else
-    echo "folder llvm-source-50 already exists, skipping git clone..."
-fi
 
-#build libc++
-rm -rf llvm-build
-mkdir -p llvm-build
-pushd llvm-build >/dev/null
-
-
-"$CMAKE" -DCMAKE_C_COMPILER=${C_COMPILER} -DCMAKE_CXX_COMPILER=${COMPILER} \
-      -LIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF -DLIBCXX_INSTALL_EXPERIMENTAL_LIBRARY=OFF \
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=./output \
-            ../llvm-source-50
-
-make cxx
-
-#install libc++ locally in output folder
-make install-libcxx install-libcxxabi
-
-popd >/dev/null
-
-#install EIGEN library
-
-rm -rf ./AirLib/deps/eigen3/Eigen
-echo "downloading eigen..."
-wget http://bitbucket.org/eigen/eigen/get/3.3.2.zip
-unzip 3.3.2.zip -d temp_eigen
-mkdir -p AirLib/deps/eigen3
-mv temp_eigen/eigen*/Eigen AirLib/deps/eigen3
-rm -rf temp_eigen
-rm 3.3.2.zip
-
-popd >/dev/null
 
 set +x
 echo ""

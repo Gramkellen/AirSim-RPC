@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(rpclib_wrapper)
+set(CMAKE_CXX_STANDARD        17 CACHE STRING "" FORCE)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS      OFF)
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake-modules") 
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../cmake-modules/CommonSetup.cmake")
