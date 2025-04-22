@@ -9,15 +9,15 @@
 #include "Components/StaticMeshComponent.h"
 #include "EngineUtils.h"
 #include "Runtime/Engine/Classes/Engine/StaticMesh.h"
-#include "UObjectIterator.h"
+#include "UObject/UObjectIterator.h"
 #include "Camera/CameraComponent.h"
 //#include "Runtime/Foliage/Public/FoliageType.h"
-#include "MessageDialog.h"
+#include "Misc/MessageDialog.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/SkeletalMesh.h"
 #include "Slate/SceneViewport.h"
 #include "IImageWrapper.h"
-#include "ObjectThumbnail.h"
+#include "Misc/ObjectThumbnail.h"
 #include "Engine/Engine.h"
 #include <exception>
 #include "common/common_utils/Utils.hpp"
@@ -123,15 +123,9 @@ void UAirBlueprintLib::enableViewportRendering(AActor* context, bool enable)
         // Do this only if the main viewport is not being rendered anyway in case there are
         // any adverse performance effects during main rendering.
         //HACK: FViewPort doesn't expose this field so we are doing dirty work around by maintaining count by ourselves
-        if (flush_on_draw_count_ == 0)
-            viewport->GetGameViewport()->IncrementFlushOnDraw();
     }
     else {
         viewport->EngineShowFlags.SetRendering(true);
-
-        //HACK: FViewPort doesn't expose this field so we are doing dirty work around by maintaining count by ourselves
-        if (flush_on_draw_count_ > 0)
-            viewport->GetGameViewport()->DecrementFlushOnDraw();
     }
 }
 
