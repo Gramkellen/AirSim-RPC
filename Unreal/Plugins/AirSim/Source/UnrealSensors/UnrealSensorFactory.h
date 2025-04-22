@@ -14,6 +14,7 @@ public:
     typedef msr::airlib::AirSimSettings AirSimSettings;
 
 public:
+    virtual ~UnrealSensorFactory() = default;
     UnrealSensorFactory(AActor* actor, const NedTransform* ned_transform);
     void setActor(AActor* actor, const NedTransform* ned_transform);
     virtual std::unique_ptr<msr::airlib::SensorBase> createSensorFromSettings(
